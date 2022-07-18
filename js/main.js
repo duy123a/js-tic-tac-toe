@@ -29,6 +29,13 @@ function showReplayButton() {
   }
 }
 
+function hideReplayButton() {
+  const replayButtonElement = getReplayButtonElement();
+  if (replayButtonElement) {
+    replayButtonElement.classList.remove('show');
+  }
+}
+
 function highlightWinCells(winPositions) {
   if (!Array.isArray(winPositions) || winPositions.length !== 3) {
     throw new Error('Invalid win positions');
@@ -39,15 +46,19 @@ function highlightWinCells(winPositions) {
   }
 }
 
+function updateCurrentTurn(turn) {
+  const currentTurnElement = getCurrentTurnElement();
+  if (currentTurnElement) {
+    currentTurnElement.classList.remove(TURN.CROSS, TURN.CIRCLE);
+    currentTurnElement.classList.add(turn);
+  }
+}
+
 function toggleTurn() {
   // toggle turn
   currentTurn = currentTurn === TURN.CROSS ? TURN.CIRCLE : TURN.CROSS;
   // update current turn status on DOM
-  const currentTurnElement = getCurrentTurnElement();
-  if (currentTurnElement) {
-    currentTurnElement.classList.remove(TURN.CROSS, TURN.CIRCLE);
-    currentTurnElement.classList.add(currentTurn);
-  }
+  updateCurrentTurn(currentTurn);
 }
 
 function handleCellClick(cell, index) {
@@ -82,8 +93,31 @@ function handleCellClick(cell, index) {
     }
     default:
   }
+}
 
-  console.log('click', cell, index);
+function resetGame() {
+  // reset temp global vars
+  currentTurn = TURN.CROSS;
+  gameStatus = GAME_STATUS.PLAYING;
+  cellValues = cellValues.map(() => '');
+
+  // reset current turn
+  updateCurrentTurn(currentTurn);
+
+  // hide replay button
+  hideReplayButton();
+
+  // reset game board
+  const cellElementList = getCellElementList();
+  if (!cellElementList) {
+    throw new Error("Can't find cell element list");
+  }
+  for (const cell of cellElementList) {
+    cell.className = '';
+  }
+
+  // ready to play again
+  updateGameStatus(gameStatus);
 }
 
 function initCellElementList() {
@@ -96,6 +130,13 @@ function initCellElementList() {
       handleCellClick(cell, index);
     });
   });
+}
+
+function initReplayButton() {
+  const replayButtonElement = getReplayButtonElement();
+  if (replayButtonElement) {
+    replayButtonElement.addEventListener('click', resetGame);
+  }
 }
 
 /**
@@ -130,7 +171,7 @@ function initCellElementList() {
   // bind click event for all li elements
   initCellElementList();
   // bind click event for replay button
-
+  initReplayButton();
   // change loading state to ready state
   updateGameStatus(gameStatus);
 })();
